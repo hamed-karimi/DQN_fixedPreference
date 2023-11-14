@@ -13,14 +13,14 @@ from Environment import Environment
 from Controller import Controller
 
 
-def get_predefined_needs(num_object):
-    temp_need = [[-10, -5, 0, 5, 10]] * num_object
+def get_predefined_preferences(num_object):
+    temp_need = [[0, 1]] * num_object
     need_num = len(temp_need[0]) ** num_object
-    need_batch = torch.zeros((need_num, num_object))
+    preference_batch = torch.zeros((need_num, num_object))
     ns = np.zeros((1, num_object))
     for i, ns in enumerate(itertools.product(*temp_need)):
-        need_batch[i, :] = torch.tensor(ns)
-    return need_batch
+        preference_batch[i, :] = torch.tensor(ns)
+    return preference_batch
 
 
 class MetaControllerVisualizer(Visualizer):
@@ -30,14 +30,11 @@ class MetaControllerVisualizer(Visualizer):
         allactions_np = [np.array([0, 0]), np.array([1, 0]), np.array([-1, 0]), np.array([0, 1]), np.array([0, -1]),
                          np.array([1, 1]), np.array([-1, -1]), np.array([-1, 1]), np.array([1, -1])]
         self.allactions = [torch.from_numpy(x).unsqueeze(0) for x in allactions_np]
-        # self.action_mask = np.zeros((self.height, self.width, 1, len(self.allactions)))
         self.initialize_action_masks()
-        self.needs = get_predefined_needs(self.object_type_num)
+        self.preferences = get_predefined_preferences(self.object_type_num)
         self.color_options = [[1, 0, .2], [0, .8, .2], [0, 0, 0]]
         self.goal_shape_options = ['*', 's', 'P', 'o', 'D', 'X']
         self.objects_color_name = ['red', 'green', 'black']  # 2: stay
-        self.row_num = 5
-        self.col_num = 6
 
     def get_figure_title(self, need):
         title = '$n_{0}: {1:.2f}'.format('{' + self.objects_color_name[0] + '}', need[0])
@@ -62,11 +59,11 @@ class MetaControllerVisualizer(Visualizer):
     def get_goal_directed_actions(self, environment, meta_controller, controller):
         # which_action = torch.zeros((self.height, self.width), dtype=torch.int16)
         which_goal = np.empty((self.height, self.width), dtype=str)
-        row_num = 5
-        col_num = 5
+        row_num = 2
+        col_num = 2
         fig, ax = plt.subplots(row_num, col_num, figsize=(15, 12))
         meta_controller.policy_net.eval()
-        for fig_num, need in enumerate(self.needs):
+        for fig_num, preference in enumerate(self.preferences):
             r = fig_num // col_num
             c = fig_num % col_num
             ax[r, c].set_xticks([])
@@ -81,7 +78,7 @@ class MetaControllerVisualizer(Visualizer):
                     shape_map[(i, j)] = '.'  # Staying
                     with torch.no_grad():
                         output_values = meta_controller.policy_net(env_map.to(self.device),
-                                                                   need.unsqueeze(0).to(self.device)).clone()  # 1 * 3
+                                                                   preference.unsqueeze(0).to(self.device)).clone()  # 1 * 3
                         object_mask = env_map.sum(dim=1)
                         output_values[object_mask < 1] = -math.inf
                         goal_location = torch.where(torch.eq(output_values, output_values.max()))
@@ -97,7 +94,7 @@ class MetaControllerVisualizer(Visualizer):
                                          alpha=0.4,
                                          facecolor=self.color_options[goal_type])
 
-            ax[r, c].set_title(self.get_figure_title(need), fontsize=10)
+            ax[r, c].set_title(self.get_figure_title(preference), fontsize=10)
 
             for obj_type in range(self.object_type_num):
                 for obj in range(environment.object_locations.shape[1]):

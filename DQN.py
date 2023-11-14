@@ -37,10 +37,10 @@ class hDQN(nn.Module):
         self.conv3 = nn.Conv2d(in_channels=self.params.DQN_CONV2_OUT_CHANNEL,
                                out_channels=self.params.DQN_CONV2_OUT_CHANNEL,
                                kernel_size=kernel_size + 2)
-        # self.fc1 = nn.Linear(in_features=self.params.DQN_CONV2_OUT_CHANNEL*4 + self.params.OBJECT_TYPE_NUM, # +2 for needs
+        # self.fc1 = nn.Linear(in_features=self.params.DQN_CONV2_OUT_CHANNEL*4 + self.params.OBJECT_TYPE_NUM, # +2 for preferences
         #                      out_features=350)
         self.fc1 = nn.Linear(in_features=self.params.DQN_CONV2_OUT_CHANNEL * 4,
-                             # +2 for needs
+                             # +2 for preferences
                              out_features=256)
         # self.fc2 = nn.Linear(in_features=350,
         #                      out_features=256)
@@ -66,7 +66,7 @@ class hDQN(nn.Module):
         #                                   stride=1,
         #                                   kernel_size=2)
 
-    def forward(self, env_map, agent_need):
+    def forward(self, env_map, agent_preference):
         batch_size = env_map.shape[0]
 
         y = F.relu(self.conv1(env_map))
@@ -76,7 +76,7 @@ class hDQN(nn.Module):
         # y = torch.concat([y, agent_need], dim=1)
         # y = self.batch_norm(y)
         y = F.relu(self.fc1(y))
-        y = torch.concat([y, agent_need], dim=1)
+        y = torch.concat([y, agent_preference], dim=1)
         y = F.relu(self.fc2(y))
         y = F.relu(self.fc3(y))
         y = self.fc4(y)

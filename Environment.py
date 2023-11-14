@@ -30,7 +30,7 @@ class Environment:
 
     def check_obj_need_compatibility(self, num_agent_need):
         if self.object_type_num != num_agent_need:
-            warnings.warn("The number of needs and objects are not equal")
+            warnings.warn("The number of preferences and objects are not equal")
 
     def get_each_object_type_num_of_appearance(self):
         # e.g., self.few_many_objects : ['few', 'many']

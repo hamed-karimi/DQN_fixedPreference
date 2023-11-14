@@ -9,7 +9,7 @@ from itertools import product
 class Agent:
     def __init__(self, h, w, n, lambda_preference, prob_init_needs_equal, predefined_location,
                  preassigned_preferences, lambda_satisfaction,
-                 rho_function='ReLU', epsilon_function='Linear'):  # n: number of needs
+                 rho_function='ReLU', epsilon_function='Linear'):  # n: number of preferences
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.height = h
         self.width = w
@@ -41,10 +41,10 @@ class Agent:
         if any(preassigned_preferences):
             preference = torch.tensor(preassigned_preferences)
         else:
-            preference = torch.zeros((1, self.num_preference))
-            p = random.randint(0, 1)
-            preference[0, p] = 1
-            # preference = (self.initial_range_of_need[1] - self.initial_range_of_need[0]) * preference + self.initial_range_of_need[0]
+            # preference = torch.zeros((1, self.num_preference))
+            # p = random.randint(0, 1)
+            # preference[0, p] = 1
+            preference = torch.randint(2, size=(1, 2))
         return preference
 
     def initial_location(self, predefined_location): # predefined_location is a list

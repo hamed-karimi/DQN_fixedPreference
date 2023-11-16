@@ -18,7 +18,8 @@ class Agent:
         # self.initial_range_of_need = [-12, 12]
         # self.range_of_need = [-12, 12]
         # self.prob_init_needs_equal = prob_init_needs_equal
-        self.preference = self.set_preference(preassigned_preferences)
+        self.preference = None
+        self.set_preference(preassigned_preferences)
         self.steps_done = 0
         self.EPS_START = 0.9
         self.EPS_END = 0.05
@@ -39,13 +40,13 @@ class Agent:
 
     def set_preference(self, preassigned_preferences=None):
         if any(preassigned_preferences):
-            preference = torch.tensor(preassigned_preferences)
+            preference = torch.tensor(preassigned_preferences, dtype=torch.float)
         else:
             # preference = torch.zeros((1, self.num_preference))
             # p = random.randint(0, 1)
             # preference[0, p] = 1
-            preference = torch.randint(2, size=(1, 2))
-        return preference
+            preference = torch.randint(2, size=(1, 2), dtype=torch.float)
+        self.preference = preference
 
     def initial_location(self, predefined_location): # predefined_location is a list
         if len(predefined_location[0]) > 0:

@@ -195,16 +195,16 @@ class MetaController:
         self.policy_net.train()
 
         initial_map_batch = torch.cat([batch.initial_map[i] for i in range(len(batch.initial_map))]).to(self.device)
-        initial_need_batch = torch.cat([batch.initial_need[i] for i in range(len(batch.initial_need))]).to(self.device)
+        initial_preference_batch = torch.cat([batch.initial_need[i] for i in range(len(batch.initial_need))]).to(self.device)
         goal_map_batch = torch.cat(batch.goal_map).to(self.device)
         reward_batch = torch.cat(batch.reward).to(self.device)
         n_steps_batch = torch.cat(batch.n_steps).to(self.device)
         final_map_batch = torch.cat([batch.final_map[i] for i in range(len(batch.final_map))]).to(self.device)
-        final_need_batch = torch.cat([batch.final_need[i] for i in range(len(batch.final_need))]).to(self.device)
+        final_preference_batch = torch.cat([batch.final_need[i] for i in range(len(batch.final_need))]).to(self.device)
         final_map_object_mask_batch = final_map_batch.sum(dim=1)
 
         policynet_goal_values_of_initial_state = self.policy_net(initial_map_batch,
-                                                                 initial_need_batch).to(self.device)
+                                                                 initial_preference_batch).to(self.device)
 
         goal_values_of_selected_goals = policynet_goal_values_of_initial_state[goal_map_batch == 1]
 
@@ -230,21 +230,20 @@ class MetaController:
         #     outlook = len(self.gammas) + 1
         #     remaining_steps = outlook - n_steps_batch
         #
-        #     # max number of gammas should be 6 not 7. We take at most 7 steps, so we should look forward to n_gamms+1, thus making n_gammas 6.
-        #
         #     have_remaining_steps = remaining_steps > 0
         #     which_q = -1 * torch.ones_like(have_remaining_steps, dtype=torch.int32)
         #     which_q[have_remaining_steps] = remaining_steps[have_remaining_steps] - 1
         #     for q_i in range(len(all_targetnets)):
         #         use_q_i = (which_q == q_i)
         #         targetnet_goal_values_of_final_state[use_q_i, :, :] = all_targetnets[q_i](final_map_batch[use_q_i],
-        #                                                                                   final_need_batch[use_q_i])
+        #                                                                                   final_preference_batch[use_q_i])
         #
         # else:
         #     targetnet_goal_values_of_final_state = self.target_net(final_map_batch,
-        #                                                            final_need_batch).to(self.device)
+        #                                                            final_preference_batch).to(self.device)
+
         targetnet_goal_values_of_final_state = self.target_net(final_map_batch,
-                                                               final_need_batch).to(self.device)
+                                                               final_preference_batch).to(self.device)
 
         targetnet_goal_values_of_final_state[final_map_object_mask_batch < 1] = -math.inf
         targetnet_max_goal_value = torch.amax(targetnet_goal_values_of_final_state,
@@ -259,5 +258,6 @@ class MetaController:
         for param in self.policy_net.parameters():
             param.grad.data.clamp_(-1, 1)
         self.optimizer.step()
-        # self.update_gammas()
+        if self.gamma_cascade:
+            self.update_gammas()
         return loss

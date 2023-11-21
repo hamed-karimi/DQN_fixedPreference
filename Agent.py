@@ -45,7 +45,7 @@ class Agent:
             # preference = torch.zeros((1, self.num_preference))
             # p = random.randint(0, 1)
             # preference[0, p] = 1
-            preference = torch.randint(2, size=(1, 2), dtype=torch.float)
+            preference = torch.rand((1, 2), dtype=torch.float) * 2
         self.preference = preference
 
     def initial_location(self, predefined_location): # predefined_location is a list

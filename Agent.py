@@ -42,10 +42,10 @@ class Agent:
         if any(preassigned_preferences):
             preference = torch.tensor(preassigned_preferences, dtype=torch.float)
         else:
-            preference = torch.zeros((1, self.num_preference))
-            p = torch.randint(0, 2, size=(1, 2), dtype=torch.bool)
-            preference[p] = 1
-            # preference = torch.rand((1, 2), dtype=torch.float) * 2
+            # preference = torch.zeros((1, self.num_preference))
+            # p = torch.randint(0, 2, size=(1, 2), dtype=torch.bool)
+            # preference[p] = 1
+            preference = torch.rand((1, 2), dtype=torch.float) * 4 - 2
 
         self.preference = preference
 

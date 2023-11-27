@@ -14,7 +14,7 @@ from Controller import Controller
 
 
 def get_predefined_preferences(num_object):
-    temp_need = [[0, 1]] * num_object
+    temp_need = [[-1, 1]] * num_object
     need_num = len(temp_need[0]) ** num_object
     preference_batch = torch.zeros((need_num, num_object))
     ns = np.zeros((1, num_object))

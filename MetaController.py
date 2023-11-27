@@ -223,27 +223,28 @@ class MetaController:
                                                                        index=n_steps_batch.unsqueeze(dim=1).long() - 1)
         # q_gammas = torch.cumprod(steps_discounts, dim=1).gather(dim=1,
         #                                                         index=n_steps_batch.unsqueeze(dim=1).long())
-        # if not self.all_gammas_ramped_up:
-        #     targetnet_goal_values_of_final_state = torch.zeros_like(policynet_goal_values_of_initial_state)
-        #     all_targetnets = deepcopy(self.saved_target_nets)
-        #     all_targetnets.append(self.target_net)
-        #     outlook = len(self.gammas) + 1
-        #     remaining_steps = outlook - n_steps_batch
-        #
-        #     have_remaining_steps = remaining_steps > 0
-        #     which_q = -1 * torch.ones_like(have_remaining_steps, dtype=torch.int32)
-        #     which_q[have_remaining_steps] = remaining_steps[have_remaining_steps] - 1
-        #     for q_i in range(len(all_targetnets)):
-        #         use_q_i = (which_q == q_i)
-        #         targetnet_goal_values_of_final_state[use_q_i, :, :] = all_targetnets[q_i](final_map_batch[use_q_i],
-        #                                                                                   final_preference_batch[use_q_i])
-        #
-        # else:
-        #     targetnet_goal_values_of_final_state = self.target_net(final_map_batch,
-        #                                                            final_preference_batch).to(self.device)
+        if self.gamma_cascade:
+            if not self.all_gammas_ramped_up:
+                targetnet_goal_values_of_final_state = torch.zeros_like(policynet_goal_values_of_initial_state)
+                all_targetnets = deepcopy(self.saved_target_nets)
+                all_targetnets.append(self.target_net)
+                outlook = len(self.gammas) + 1
+                remaining_steps = outlook - n_steps_batch
 
-        targetnet_goal_values_of_final_state = self.target_net(final_map_batch,
-                                                               final_preference_batch).to(self.device)
+                have_remaining_steps = remaining_steps > 0
+                which_q = -1 * torch.ones_like(have_remaining_steps, dtype=torch.int32)
+                which_q[have_remaining_steps] = remaining_steps[have_remaining_steps] - 1
+                for q_i in range(len(all_targetnets)):
+                    use_q_i = (which_q == q_i)
+                    targetnet_goal_values_of_final_state[use_q_i, :, :] = all_targetnets[q_i](final_map_batch[use_q_i],
+                                                                                              final_preference_batch[use_q_i])
+
+            else:
+                targetnet_goal_values_of_final_state = self.target_net(final_map_batch,
+                                                                       final_preference_batch).to(self.device)
+        else:
+            targetnet_goal_values_of_final_state = self.target_net(final_map_batch,
+                                                                   final_preference_batch).to(self.device)
 
         targetnet_goal_values_of_final_state[final_map_object_mask_batch < 1] = -math.inf
         targetnet_max_goal_value = torch.amax(targetnet_goal_values_of_final_state,

@@ -89,5 +89,7 @@ class Agent:
         dt = 1 if moving_cost < 1.4 else moving_cost
         environment.update_agent_location_on_map(self)
         f, _ = environment.get_reward()
+        # We apply relu bc when a preference is negative, the satisfaction becomes largely negative,
+        # Thus makes moving very costly:
         satisfaction = self.relu(f * self.preference * self.lambda_satisfaction).sum()
         return satisfaction, moving_cost, dt
